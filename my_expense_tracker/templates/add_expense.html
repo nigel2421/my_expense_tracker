@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense - Expense Tracker{% endblock %}
+
+{% block content %}
+    <h2>Add New Expense</h2>
+    <div id="response-message" class="alert" style="display:none;"></div>
+
+    <div class="form-grid">
+        <!-- Manual Entry Form -->
+        <form id="add-expense-form">
+            <h3>Manual Entry</h3>
+            <div class="form-group">
+                <input type="hidden" id="transaction_id" name="transaction_id">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount (Ksh)</label>
+                <input type="number" id="amount" name="amount" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="payment_method">Payment Method</label>
+                <select id="payment_method" name="payment_method" required>
+                    <option value="MPESA">MPESA</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+             <div class="form-group">
+                <label for="mpesa_charge">M-Pesa Charge (if any)</label>
+                <input type="number" id="mpesa_charge" name="mpesa_charge" step="0.01" min="0" value="0">
+            </div>
+            <button type="submit" class="btn">Add Expense</button>
+        </form>
+
+        <!-- SMS Parser -->
+        <div>
+            <h3>...or Parse M-Pesa SMS</h3>
+            <div class="form-group">
+                <label for="sms-message">Paste M-Pesa SMS here:</label>
+                <textarea id="sms-message" placeholder="Paste your M-Pesa SMS message here..."></textarea>
+            </div>
+            <button id="parse-sms-btn" class="btn">Parse SMS</button>
+        </div>
+    </div>
+    
+    <hr style="margin: 2em 0;">
+
+    <!-- PDF Parser -->
+    <div>
+        <h2>Upload Statement</h2>
+        <p>Upload an M-Pesa PDF statement to automatically add multiple transactions.</p>
+        <form id="upload-pdf-form">
+            <div class="form-group">
+                <label for="pdf-file">Select PDF Statement</label>
+                <input type="file" id="pdf-file" name="file" accept=".pdf" required>
+            </div>
+            <button type="submit" class="btn">Upload and Parse</button>
+        </form>
+        <div id="pdf-response-message" class="alert" style="display:none;"></div>
+        <div id="parsed-transactions-container" style="margin-top: 1em;">
+            <!-- Parsed transactions will be displayed here -->
+        </div>
+    </div>
+    
+    <script>
+        let parsedTransactions = []; // Store parsed transactions here
+        // Set default date to today
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Handle SMS Parsing
+        document.getElementById('parse-sms-btn').addEventListener('click', async () => {
+            const smsText = document.getElementById('sms-message').value;
+            if (!smsText) {
+                alert('Please paste an SMS message first.');
+                return;
+            }
+
+            const response = await fetch('/api/parse-sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sms_message: smsText })
+            });
+
+            const data = await response.json();
+            const messageDiv = document.getElementById('response-message');
+
+            if (response.ok) {
+                document.getElementById('date').value = data.date;
+                document.getElementById('description').value = data.description;
+                document.getElementById('amount').value = data.amount;
+                document.getElementById('mpesa_charge').value = data.transaction_cost;
+                document.getElementById('transaction_id').value = data.transaction_id || ''; // Populate the hidden field
+                document.getElementById('payment_method').value = 'MPESA';
+                
+                const categorySelect = document.getElementById('category');
+                if (data.suggested_category && [...categorySelect.options].some(o => o.value === data.suggested_category)) {
+                    categorySelect.value = data.suggested_category;
+                }
+                
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = 'SMS parsed and form pre-filled!';
+                messageDiv.style.display = 'block';
+            } else {
+                messageDiv.className = 'alert alert-error';
+                messageDiv.textContent = `Error: ${data.error}`;
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // Handle Form Submission
+        document.getElementById('add-expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // If transaction_id is empty, don't send it so it becomes null in the backend
+            if (!data.transaction_id) {
+                delete data.transaction_id;
+            }
+
+            // Ensure numeric types are correct
+            data.amount = parseFloat(data.amount);
+            data.mpesa_charge = parseFloat(data.mpesa_charge || 0);
+
+            const response = await fetch('/api/expenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            const messageDiv = document.getElementById('response-message');
+
+            if (response.ok) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = result.message;
+                form.reset();
+                document.getElementById('date').valueAsDate = new Date(); // Reset date to today
+            } else {
+                messageDiv.className = 'alert alert-error';
+                messageDiv.textContent = `Error: ${result.error}`;
+            }
+            messageDiv.style.display = 'block';
+            window.scrollTo(0, 0); // Scroll to top to see message
+        });
+
+        // Handle PDF Upload
+        document.getElementById('upload-pdf-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const messageDiv = document.getElementById('pdf-response-message');
+            const container = document.getElementById('parsed-transactions-container');
+            
+            messageDiv.className = 'alert alert-success';
+            messageDiv.textContent = 'Parsing PDF... please wait.';
+            messageDiv.style.display = 'block';
+            container.innerHTML = '';
+
+            const response = await fetch('/api/parse-pdf', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                messageDiv.className = 'alert alert-error';
+                messageDiv.textContent = `Error: ${result.error}`;
+                return;
+            }
+            
+            parsedTransactions = result.transactions;
+            if (parsedTransactions.length === 0) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = 'PDF parsed, but no outgoing transactions were found.';
+                return;
+            }
+
+            messageDiv.style.display = 'none';
+            renderParsedTransactions();
+        });
+
+        function renderParsedTransactions() {
+            const container = document.getElementById('parsed-transactions-container');
+            container.innerHTML = '<h3>Parsed Transactions</h3>' +
+                '<p>Click "Add" to save an expense. Already existing expenses will be skipped automatically.</p>';
+            
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+
+            parsedTransactions.forEach((trx, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${trx.date}</td>
+                    <td>${trx.description}</td>
+                    <td>${trx.amount.toFixed(2)}</td>
+                    <td><button class="btn add-trx-btn" data-index="${index}">Add</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            container.appendChild(table);
+        }
+
+        // Event delegation for dynamically added buttons
+        document.getElementById('parsed-transactions-container').addEventListener('click', async (e) => {
+            if (e.target && e.target.classList.contains('add-trx-btn')) {
+                const button = e.target;
+                const index = button.dataset.index;
+                const trx = parsedTransactions[index];
+
+                // Populate the main form with data from the parsed transaction
+                document.getElementById('date').value = trx.date;
+                document.getElementById('description').value = trx.description;
+                document.getElementById('amount').value = trx.amount;
+                document.getElementById('transaction_id').value = trx.transaction_id;
+                document.getElementById('payment_method').value = 'MPESA';
+                document.getElementById('mpesa_charge').value = 0; // PDF statements don't usually have this easily parsable
+
+                // Use the existing form submission logic by creating a request
+                const form = document.getElementById('add-expense-form');
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                data.amount = parseFloat(data.amount);
+                data.mpesa_charge = parseFloat(data.mpesa_charge || 0);
+
+                const response = await fetch('/api/expenses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                const messageDiv = document.getElementById('response-message');
+
+                if (response.ok) {
+                    button.textContent = 'Added!';
+                    button.disabled = true;
+                    button.style.backgroundColor = '#5cb85c'; // Green for success
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.textContent = result.message;
+                } else {
+                    button.textContent = 'Failed';
+                    button.disabled = true;
+                    button.style.backgroundColor = '#d9534f'; // Red for error
+                    messageDiv.className = 'alert alert-error';
+                    messageDiv.textContent = `Error: ${result.error}`;
+                }
+                messageDiv.style.display = 'block';
+                window.scrollTo(0, 0);
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}View Expenses - Expense Tracker{% endblock %}
+
+{% block content %}
+    <style>
+        .filters { display: flex; gap: 1em; margin-bottom: 1em; align-items: center; flex-wrap: wrap; }
+        .filters input, .filters button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+        .pagination { margin-top: 1em; text-align: center; }
+        .pagination button { padding: 8px 12px; margin: 0 5px; cursor: pointer; }
+        .pagination button:disabled { cursor: not-allowed; opacity: 0.5; }
+    </style>
+
+    <h2>View All Expenses</h2>
+
+    <div class="filters">
+        <input type="date" id="start-date-filter" title="Start Date">
+        <input type="date" id="end-date-filter" title="End Date">
+        <button id="filter-btn" class="btn">Filter</button>
+        <button id="reset-filter-btn" class="btn">Reset</button>
+    </div>
+
+    <table id="expenses-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>M-Pesa Charge</th>
+                <th>Total</th>
+                <th>Payment Method</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Expense rows will be inserted here -->
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <button id="prev-page" disabled>&laquo; Previous</button>
+        <span id="page-info">Page 1 of 1</span>
+        <button id="next-page" disabled>Next &raquo;</button>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const limit = 15;
+
+        function formatCurrency(amount) {
+            return amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        async function fetchExpenses(page = 1) {
+            const startDate = document.getElementById('start-date-filter').value;
+            const endDate = document.getElementById('end-date-filter').value;
+
+            let url = `/api/expenses?page=${page}&limit=${limit}`;
+            if (startDate) url += `&start_date=${startDate}`;
+            if (endDate) url += `&end_date=${endDate}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const tableBody = document.querySelector('#expenses-table tbody');
+            tableBody.innerHTML = ''; // Clear existing rows
+
+            if (data.expenses.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No expenses found.</td></tr>';
+            } else {
+                data.expenses.forEach(exp => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${exp.date}</td>
+                        <td>${exp.description}</td>
+                        <td>${exp.category}</td>
+                        <td>${formatCurrency(exp.amount)}</td>
+                        <td>${formatCurrency(exp.mpesa_charge)}</td>
+                        <td>${formatCurrency(exp.total_outflow)}</td>
+                        <td>${exp.payment_method}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Update pagination
+            currentPage = data.page;
+            const totalPages = Math.ceil(data.total_records / data.limit);
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages || 1}`;
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchExpenses();
+            document.getElementById('filter-btn').addEventListener('click', () => fetchExpenses(1));
+            document.getElementById('reset-filter-btn').addEventListener('click', () => {
+                document.getElementById('start-date-filter').value = '';
+                document.getElementById('end-date-filter').value = '';
+                fetchExpenses(1);
+            });
+            document.getElementById('prev-page').addEventListener('click', () => { if (currentPage > 1) fetchExpenses(currentPage - 1); });
+            document.getElementById('next-page').addEventListener('click', () => { fetchExpenses(currentPage + 1); });
+        });
+    </script>
+{% endblock %}

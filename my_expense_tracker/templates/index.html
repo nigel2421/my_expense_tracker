@@ -1,111 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Personal Expense Tracker</h1>
-        </header>
+{% extends "base.html" %}
 
-        <main class="main-grid">
-            <!-- Left Column: Forms and Insights -->
-            <div class="column-left">
-                <!-- SMS Parser Section -->
-                <div class="card">
-                    <h2>Parse M-Pesa SMS</h2>
-                    <form id="sms-parser-form">
-                        <textarea id="sms-message" placeholder="Paste your M-Pesa SMS here..." rows="4"></textarea>
-                        <button type="submit">Parse SMS</button>
-                        <p id="sms-error" class="error-message"></p>
-                    </form>
-                </div>
+{% block title %}Dashboard - Expense Tracker{% endblock %}
 
-                <!-- Add Expense Form -->
-                <div class="card">
-                    <h2>Add New Expense</h2>
-                    <form id="add-expense-form">
-                        <input type="date" id="date" required>
-                        <input type="text" id="description" placeholder="Description" required>
-                        <select id="category" required>
-                            <option value="" disabled selected>Select a Category</option>
-                            {% for category in categories %}
-                            <option value="{{ category }}">{{ category }}</option>
-                            {% endfor %}
-                        </select>
-                        <input type="number" id="amount" placeholder="Amount (Ksh)" step="0.01" required>
-                        <input type="text" id="payment-method" placeholder="Payment Method" value="MPESA" required>
-                        <input type="number" id="mpesa-charge" placeholder="M-Pesa Charge" step="0.01" value="0">
-                        <button type="submit">Add Expense</button>
-                        <p id="form-success" class="success-message"></p>
-                    </form>
-                </div>
+{% block content %}
+    <style>
+        /* Page-specific styles */
+        .totals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; margin-bottom: 2em; }
+        .total-card { border: 1px solid #e0e0e0; padding: 1em; border-radius: 8px; text-align: center; background-color: #fafafa;}
+        .total-card h3 { margin-top: 0; font-size: 1em; color: #555; }
+        .total-card .amount { font-size: 1.75em; font-weight: bold; color: #0056b3; }
+        .total-card .amount.negative { color: #d9534f; }
+        .total-card .amount.positive { color: #5cb85c; }
+        .cell-negative { color: #d9534f; font-weight: bold; }
+        .cell-positive { color: #5cb85c; }
+        #month-selector { padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 1em; }
+    </style>
+    <h1>Dashboard</h1>
 
-                <!-- Financial Insights Section -->
-                <div class="card">
-                    <h2>Financial Insights</h2>
-                    <button id="get-insights-btn">Get Current Month Insights</button>
-                    <div id="insights-container">
-                        <!-- Insights will be loaded here -->
-                    </div>
-                </div>
+        <!-- Monthly Summary Section -->
+        <h2>Monthly Summary for <span id="summary-month-display"></span></h2>
+        <label for="month-selector" class="sr-only">Select Month</label>
+        <input type="month" id="month-selector" onchange="fetchMonthlySummary()" title="Select Month" aria-label="Select Month">
+
+
+        <div id="summary-totals" class="totals-grid">
+            <div class="total-card">
+                <h3>Total Budgeted</h3>
+                <p class="amount">Ksh <span id="total-budgeted">0.00</span></p>
             </div>
-
-            <!-- Right Column: Data Display -->
-            <div class="column-right">
-                <!-- Monthly Summary Section -->
-                <div class="card">
-                    <h2>Monthly Summary</h2>
-                    <div class="summary-controls">
-                        <label for="month-picker">Select Month:</label>
-                        <input type="month" id="month-picker">
-                    </div>
-                    <table id="summary-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Spent</th>
-                                <th>Budgeted</th>
-                                <th>Remaining</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Summary data will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Recent Expenses Section -->
-                <div class="card">
-                    <h2>Recent Expenses</h2>
-                    <table id="expenses-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Expense data will be loaded here -->
-                        </tbody>
-                    </table>
-                    <div class="pagination-controls">
-                        <button id="prev-page-btn" disabled>&laquo; Previous</button>
-                        <span id="page-info">Page 1</span>
-                        <button id="next-page-btn" disabled>Next &raquo;</button>
-                    </div>
-                </div>
+            <div class="total-card">
+                <h3>Total Spent</h3>
+                <p class="amount">Ksh <span id="total-spent">0.00</span></p>
             </div>
-        </main>
-    </div>
+            <div class="total-card">
+                <h3>Remaining</h3>
+                <p class="amount" id="total-remaining-wrapper">Ksh <span id="total-remaining">0.00</span></p>
+            </div>
+        </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
-</html>
+        <table id="summary-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Spent</th>
+                    <th>Budgeted</th>
+                    <th>Remaining</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Summary rows will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+
+    <script>
+        function formatCurrency(amount) {
+            return amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        async function fetchMonthlySummary() {
+            const monthSelector = document.getElementById('month-selector');
+            const selectedMonth = monthSelector.value;
+
+            const response = await fetch(`/api/summary?year_month=${selectedMonth}`);
+            const data = await response.json();
+
+            document.getElementById('total-budgeted').textContent = formatCurrency(data.totals.budgeted);
+            document.getElementById('total-spent').textContent = formatCurrency(data.totals.spent);
+            
+            const totalRemainingEl = document.getElementById('total-remaining');
+            const totalRemainingWrapper = document.getElementById('total-remaining-wrapper');
+            totalRemainingEl.textContent = formatCurrency(data.totals.remaining);
+            totalRemainingWrapper.className = `amount ${data.totals.remaining >= 0 ? 'positive' : 'negative'}`;
+
+            const summaryTableBody = document.querySelector('#summary-table tbody');
+            summaryTableBody.innerHTML = ''; 
+            data.summary.forEach(item => {
+                const row = document.createElement('tr');
+                const remainingClass = item.remaining >= 0 ? 'cell-positive' : 'cell-negative';
+                row.innerHTML = `<td>${item.category}</td><td>${formatCurrency(item.total_spent)}</td><td>${formatCurrency(item.budgeted)}</td><td class="${remainingClass}">${formatCurrency(item.remaining)}</td>`;
+                summaryTableBody.appendChild(row);
+            });
+            
+            const date = new Date(selectedMonth + '-02');
+            document.getElementById('summary-month-display').textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const monthSelector = document.getElementById('month-selector');
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            monthSelector.value = `${year}-${month}`;
+            fetchMonthlySummary();
+        });
+    </script>
+{% endblock %}

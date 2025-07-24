@@ -2,11 +2,15 @@
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 from calendar import monthrange
+import os
+import sqlite3
+from werkzeug.utils import secure_filename
 
-import database 
+import database
 from mpesa_charges import calculate_mpesa_charge
 from sms_parser import parse_mpesa_message
 from financial_agent import FinancialAgent
+from pdf_parser import parse_mpesa_statement_pdf
 
 # --- Configuration ---
 # This can eventually be loaded from a config file or database.
@@ -23,17 +27,35 @@ BUDGETED_AMOUNTS = {
 }
 
 app = Flask(__name__)
+
+# Configuration for file uploads
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 database.init_db() # Initialize the database when the app starts
 agent = FinancialAgent(BUDGETED_AMOUNTS) # Initialize the financial agent
 
-# --- HTML Rendering Route ---
+# --- HTML Rendering Routes ---
 
 @app.route('/')
 def index():
-    """Serves the main HTML page."""
-    # Add an 'Other' category for flexibility and pass to the template
+    """Serves the main dashboard page."""
+    return render_template('index.html')
+
+@app.route('/add-expense')
+def add_expense_page():
+    """Serves the page for adding a new expense."""
     categories = sorted(list(BUDGETED_AMOUNTS.keys()) + ['Other'])
-    return render_template('index.html', categories=categories)
+    return render_template('add_expense.html', categories=categories)
+
+@app.route('/view-expenses')
+def view_expenses_page():
+    """Serves the page for viewing all expenses."""
+    return render_template('view_expenses.html')
 
 # --- API Endpoints ---
 
@@ -52,6 +74,8 @@ def add_expense_api():
     try:
         amount = float(data['amount'])
         mpesa_charge = float(data.get('mpesa_charge', 0.0))
+        # Get transaction_id, default to None if not present
+        transaction_id = data.get('transaction_id') or None
         
         database.add_expense(
             date=data['date'],
@@ -59,9 +83,13 @@ def add_expense_api():
             category=data['category'],
             amount=amount,
             payment_method=data['payment_method'],
-            mpesa_charge=mpesa_charge
+            mpesa_charge=mpesa_charge,
+            transaction_id=transaction_id # Pass it to the database function
         )
         return jsonify({"message": "Expense added successfully!"}), 201
+    except sqlite3.IntegrityError:
+        # This error is raised when the UNIQUE constraint on transaction_id fails
+        return jsonify({"error": f"Duplicate transaction: An expense with ID '{transaction_id}' already exists."}), 409 # 409 Conflict
     except (ValueError, TypeError) as e:
         return jsonify({"error": f"Invalid data format: {e}"}), 400
     except Exception as e:
@@ -109,15 +137,15 @@ def get_summary_api():
     
     # Convert list of Row objects to list of dicts
     summary_list = [dict(row) for row in summary_data]
-    
+
     # Combine with budget for a more comprehensive view
     combined_summary = []
     spent_categories = {item['category'] for item in summary_list}
 
     for item in summary_list:
         budget = BUDGETED_AMOUNTS.get(item['category'], 0)
-        item['budgeted'] = budget
-        item['remaining'] = budget - item['total_spent'] if budget > 0 else 0
+        item['budgeted'] = float(budget)
+        item['remaining'] = float(budget - item['total_spent']) if budget > 0 else 0.0
         combined_summary.append(item)
 
     # Add budgeted categories that have no spending yet
@@ -125,12 +153,16 @@ def get_summary_api():
         if category not in spent_categories and budget > 0:
             combined_summary.append({
                 'category': category,
-                'total_spent': 0,
-                'budgeted': budget,
-                'remaining': budget
+                'total_spent': 0.0,
+                'budgeted': float(budget),
+                'remaining': float(budget)
             })
-            
-    return jsonify(combined_summary)
+
+    # Calculate totals
+    total_spent = sum(item['total_spent'] for item in summary_list)
+    total_budgeted = sum(float(b) for b in BUDGETED_AMOUNTS.values())
+
+    return jsonify({"summary": combined_summary, "totals": {"spent": total_spent, "budgeted": total_budgeted, "remaining": total_budgeted - total_spent}})
 
 @app.route('/api/parse-sms', methods=['POST'])
 def parse_sms_api():
@@ -143,12 +175,18 @@ def parse_sms_api():
     
     if parsed_data:
         # Suggest a category to help the user
-        if "airtime" in parsed_data.get('description', '').lower():
+        description_lower = parsed_data.get('description', '').lower()
+        business_lower = parsed_data.get('business', '').lower()
+        
+        if "airtime" in description_lower:
             parsed_data['suggested_category'] = "Mobile Data/Airtime"
-        elif "withdrawal" in parsed_data.get('description', '').lower():
+        elif "withdrawal" in description_lower or "agent" in description_lower:
             parsed_data['suggested_category'] = "Contingency"
+        elif business_lower in ['kplc', 'zuku', 'safaricom home']:
+            parsed_data['suggested_category'] = "Rent (Incl. Utilities)"
         else:
-            parsed_data['suggested_category'] = "Food" # A common default
+            # A common default for other payments
+            parsed_data['suggested_category'] = "Food" 
         
         return jsonify(parsed_data)
     else:
@@ -164,6 +202,48 @@ def get_insights_api():
         # In a real app, you'd log this error
         print(f"Error generating insights: {e}")
         return jsonify({"error": "Failed to generate financial insights."}), 500
+
+@app.route('/api/total-mpesa-charges', methods=['GET'])
+def get_total_mpesa_charges_api():
+    """API endpoint to get total M-Pesa charges for a period."""
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    try:
+        total_charges = database.get_total_mpesa_charges(start_date, end_date)
+        return jsonify({"total_mpesa_charges": total_charges})
+    except Exception as e:
+        # In a real app, you'd log this error
+        print(f"Error getting total mpesa charges: {e}")
+        return jsonify({"error": f"An unexpected error occurred: {e}"}), 500
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/api/parse-pdf', methods=['POST'])
+def parse_pdf_api():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        try:
+            file.save(filepath)
+            transactions = parse_mpesa_statement_pdf(filepath)
+            return jsonify({"transactions": transactions})
+        except Exception as e:
+            return jsonify({"error": f"Failed to parse PDF: {e}"}), 500
+        finally:
+            # Clean up the uploaded file
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
+    return jsonify({"error": "File type not allowed"}), 400
 
 if __name__ == '__main__':
     # Use debug=True for development, which enables auto-reloading

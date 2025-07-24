@@ -123,9 +123,9 @@ def view_expenses_flow():
     print("\n--- Your Expenses ---")
     print(f"{'Date':<12} {'Category':<15} {'Amount':<10} {'Charge':<8} {'Total':<10} {'Payment':<10} {'Description':<25}")
     print("-" * 100)
-    for exp in expenses:
-        # Assuming exp is (date, description, category, amount, payment_method, mpesa_charge, total_outflow)
-        print(f"{exp[0]:<12} {exp[2]:<15} {exp[3]:<10.2f} {exp[5]:<8.2f} {exp[6]:<10.2f} {exp[4]:<10} {exp[1]:<25}")
+    for exp in expenses[0]: # Access the list of expenses from the tuple
+        # Assuming exp is a sqlite3.Row object, which behaves like a dictionary
+        print(f"{exp['date']:<12} {exp['category']:<15} {exp['amount']:<10.2f} {exp['mpesa_charge']:<8.2f} {exp['total_outflow']:<10.2f} {exp['payment_method']:<10} {exp['description']:<25}")
     print("-" * 100)
 
 def view_monthly_summary_flow():
