@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Hardware Shop - Interior & Exterior Design</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">City Hardware</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- The hero section now has a cleaner structure for the slider and content overlay. -->
+        <!-- CSS should be used to style the .hero, .hero-slider-images, and .hero-content-overlay for the desired visual effect (e.g., absolute positioning for overlay). -->
+        <section class="hero">
+            <div id="hero-loading-indicator">
+                <p>Loading amazing visuals...</p>
+            </div>
+
+            <!-- The slider container is hidden by default and made visible by JS after images preload. -->
+            <div id="hero-slider-container" style="visibility: hidden; opacity: 0; transition: opacity 0.5s ease-in-out;">
+                <div class="hero-slider-images">
+                    <img src="images/1.png" class="hero-slider-image active" data-caption="Modern Home Interior Design">
+                    <img src="images/2.png" class="hero-slider-image" data-caption="Secure Commercial Fencing Solutions">
+                    <img src="images/3.png" class="hero-slider-image" data-caption="Elegant Kitchen Countertops">
+                    <!-- Add more hero images here -->
+                </div>
+                <!-- All text content is grouped in an overlay for easier styling -->
+                <div class="hero-content-overlay">
+                    <div class="hero-text">
+                        <h1>Quality Products for Modern Living</h1>
+                        <p>From secure fencing to elegant countertops, we have everything you need for your design project.</p>
+                        <a href="#products" class="btn">Explore Our Products</a>
+                    </div>
+                    <div class="hero-slider-caption">
+                        Modern Home Interior Design
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- The two sections with id="products" have been merged into one for valid HTML. -->
+        <!-- A container div for the cards has been added for better layout control. -->
+        <section id="products" class="product-grid">
+            <h2>Our Products</h2>
+            <div class="product-cards-container">
+                <!-- Product Card 1: Fencing -->
+                <div class="card">
+                    <img src="images/prod/1.png" alt="Clearview Fence">
+                    <div class="card-content">
+                        <h3>Clearview Fencing</h3>
+                        <p>High-security, anti-climb fencing for maximum protection with a modern, unobtrusive look.</p>
+                        <a href="products/clearview-fence.html" class="btn">View Details</a>
+                    </div>
+                </div>
+
+                <!-- Product Card 2: Quartz -->
+                <div class="card">
+                    <img src="images/quartz-countertop.jpg" alt="Quartz Countertop">
+                    <div class="card-content">
+                        <h3>Quartz Countertops</h3>
+                        <p>Durable, non-porous, and stylish quartz slabs for kitchens and bathrooms. Multiple colors available.</p>
+                        <a href="products/quartz-countertops.html" class="btn">View Details</a>
+                    </div>
+                </div>
+
+                <!-- Product Card 3: Marble -->
+                <div class="card">
+                    <img src="images/marble-countertop.jpg" alt="Marble Countertop">
+                    <div class="card-content">
+                        <h3>Marble Countertops</h3>
+                        <p>Classic, elegant marble for a timeless look. Available in Forest Green, Eldo White, and more.</p>
+                        <a href="products/marble-countertops.html" class="btn">View Details</a>
+                    </div>
+                </div>
+
+                 <!-- Product Card 4: Services -->
+                <div class="card">
+                    <img src="images/finishing-service.jpg" alt="Countertop Finishing Service">
+                    <div class="card-content">
+                        <h3>Finishing Services</h3>
+                        <p>Professional Bull Nossing and Engraving services to perfect the edges and fittings of your countertops.</p>
+                        <a href="products/services.html" class="btn">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="about-us">
+             <h2>About Us</h2>
+             <p>We are a premier supplier of interior and exterior design products, dedicated to providing high-quality materials and exceptional service to our clients.</p>
+        </section>
+
+        <!-- A dedicated contact section has been added for better semantic structure. -->
+        <section id="contact" class="contact-section">
+            <h2>Contact Us</h2>
+            <p>Have questions or need a quote? Reach out to us!</p>
+            <p><strong>Phone:</strong> (123) 456-7890</p>
+            <p><strong>Email:</strong> <a href="mailto:email@yourhardware.com">email@yourhardware.com</a></p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2023 City Hardware. All Rights Reserved.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script>
+        // --- Hero Slider & Preloader ---
+        // This script is now wrapped in a DOMContentLoaded event to ensure all HTML elements are available.
+        document.addEventListener('DOMContentLoaded', () => {
+            const heroSliderImages = document.querySelectorAll('.hero-slider-image');
+            const heroSliderCaption = document.querySelector('.hero-slider-caption');
+            const heroLoadingIndicator = document.getElementById('hero-loading-indicator');
+            const heroSliderContainer = document.getElementById('hero-slider-container');
+            const slideInterval = 5000; // 5 seconds
+
+            // Defensive check to ensure all required elements for the slider exist.
+            if (!heroSliderImages.length || !heroSliderCaption || !heroLoadingIndicator || !heroSliderContainer) {
+                console.error('One or more hero slider elements are missing from the DOM.');
+                if(heroLoadingIndicator) heroLoadingIndicator.style.display = 'none';
+                return;
+            }
+
+            let currentHeroImageIndex = 0;
+            let autoPlayInterval;
+
+            function showHeroImage(index) {
+                heroSliderImages.forEach(img => img.classList.remove('active'));
+                heroSliderImages[index].classList.add('active');
+                heroSliderCaption.textContent = heroSliderImages[index].dataset.caption;
+                currentHeroImageIndex = index;
+            }
+
+            function nextHeroImage() {
+                currentHeroImageIndex = (currentHeroImageIndex + 1) % heroSliderImages.length;
+                showHeroImage(currentHeroImageIndex);
+            }
+
+            // --- Image Preloading ---
+            const imageUrls = Array.from(heroSliderImages).map(img => img.src);
+            let imagesLoadedCount = 0;
+
+            function onImageLoad() {
+                imagesLoadedCount++;
+                if (imagesLoadedCount === imageUrls.length) {
+                    // All images are preloaded, hide loader and show the slider.
+                    heroLoadingIndicator.style.display = 'none';
+                    heroSliderContainer.style.visibility = 'visible';
+                    heroSliderContainer.style.opacity = 1;
+
+                    // Initialize and start the slider autoplay.
+                    showHeroImage(currentHeroImageIndex);
+                    autoPlayInterval = setInterval(nextHeroImage, slideInterval);
+                }
+            }
+
+            if (imageUrls.length > 0) {
+                imageUrls.forEach(url => {
+                    const img = new Image();
+                    img.onload = onImageLoad;
+                    img.onerror = onImageLoad; // Also count errors to prevent getting stuck
+                    img.src = url;
+                });
+            } else {
+                // If there are no images, just hide the loader.
+                heroLoadingIndicator.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

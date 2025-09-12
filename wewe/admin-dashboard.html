@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - City Hardware</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Dashboard Specific Styles */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-container h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        .form-section, .product-list-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid var(--light-grey);
+            border-radius: 8px;
+        }
+
+        .form-section h2, .product-list-section h2 {
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+
+        .product-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .product-form input[type="text"],
+        .product-form textarea,
+        .product-form select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--light-grey);
+            border-radius: 4px;
+        }
+
+        .product-form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        .product-form button[type="submit"] {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .product-form button[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+
+        .product-form button[type="button"] { /* For Cancel button */
+            background-color: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+        .product-form button[type="button"]:hover {
+            background-color: #5a6268;
+        }
+
+        #product-message {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #dc3545; /* Red for errors */
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .product-table th, .product-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .product-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .product-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .product-table button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+
+        .product-table .edit-btn {
+            background-color: #ffc107; /* Yellow */
+            color: #333;
+        }
+        .product-table .edit-btn:hover {
+            background-color: #e0a800;
+        }
+
+        .product-table .delete-btn {
+            background-color: #dc3545; /* Red */
+            color: white;
+        }
+        .product-table .delete-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">City Hardware</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#products">Products</a></li>
+                <li><a href="index.html#about">About Us</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li><a href="admin-login.html" class="btn">Admin Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-container">
+            <h1>Admin Dashboard</h1>
+
+            <div class="form-section">
+                <h2 id="form-title">Add New Product</h2>
+                <form id="product-form" class="product-form">
+                    <input type="hidden" id="product-id">
+
+                    <label for="name">Product Name:</label>
+                    <input type="text" id="name" required>
+
+                    <label for="category">Category:</label>
+                    <select id="category" required>
+                        <option value="">Select Category</option>
+                        <option value="Fencing">Fencing</option>
+                        <option value="Quartz">Quartz</option>
+                        <option value="Marble">Marble</option>
+                        <option value="Service">Service</option>
+                    </select>
+
+                    <label for="description">Description:</label>
+                    <textarea id="description" rows="3"></textarea>
+
+                    <label for="details">Details (one per line or comma-separated):</label>
+                    <textarea id="details" rows="5"></textarea>
+
+                    <button type="submit">Save Product</button>
+                    <button type="button" id="cancel-edit-btn" style="display:none;">Cancel Edit</button>
+                </form>
+                <p id="product-message"></p>
+            </div>
+
+            <div class="product-list-section">
+                <h2>Existing Products</h2>
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Details</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-table-body">
+                        <!-- Products will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Contact Us: (123) 456-7890 | email@yourhardware.com</p>
+        <p>© 2023 City Hardware. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api'; // Adjust if your backend runs on a different port/domain
+        const productForm = document.getElementById('product-form');
+        const productIdInput = document.getElementById('product-id');
+        const nameInput = document.getElementById('name');
+        const categoryInput = document.getElementById('category');
+        const descriptionInput = document.getElementById('description');
+        const detailsInput = document.getElementById('details');
+        const productTableBody = document.getElementById('product-table-body');
+        const productMessage = document.getElementById('product-message');
+        const formTitle = document.getElementById('form-title');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+        // --- Authentication Check ---
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('You must be logged in to access the admin dashboard.');
+            window.location.href = 'admin-login.html'; // Redirect to login page
+        }
+
+        // --- Helper Function to make authenticated API calls ---
+        async function makeApiRequest(url, method = 'GET', data = null) {
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'x-auth-token': token // Include the JWT
+                };
+
+                const options = {
+                    method,
+                    headers
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(responseData.msg || 'Something went wrong');
+                }
+                return responseData;
+            } catch (error) {
+                console.error('API Request Error:', error);
+                productMessage.textContent = `Error: ${error.message}`;
+                productMessage.style.color = '#dc3545';
+                throw error; // Re-throw to be caught by calling function
+            }
+        }
+
+        // --- Fetch and Render Products ---
+        async function fetchProducts() {
+            try {
+                const products = await makeApiRequest(`${API_BASE_URL}/products`);
+                productTableBody.innerHTML = ''; // Clear existing rows
+                if (products.length === 0) {
+                    productTableBody.innerHTML = '<tr><td colspan="5">No products found.</td></tr>';
+                    return;
+                }
+                products.forEach(product => {
+                    const row = productTableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${product.name}</td>
+                        <td>${product.category}</td>
+                        <td>${product.description || ''}</td>
+                        <td>${product.details ? product.details.join(', ') : ''}</td>
+                        <td>
+                            <button class="edit-btn" data-id="${product._id}">Edit</button>
+                            <button class="delete-btn" data-id="${product._id}">Delete</button>
+                        </td>
+                    `;
+                });
+                addTableEventListeners();
+            } catch (error) {
+                // Error message already set by makeApiRequest
+            }
+        }
+
+        // --- Add/Edit Product ---
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            productMessage.textContent = ''; // Clear previous messages
+
+            const productId = productIdInput.value;
+            const name = nameInput.value;
+            const category = categoryInput.value;
+            const description = descriptionInput.value;
+            const details = detailsInput.value.split('\n').map(d => d.trim()).filter(d => d); // Split by new line, trim, remove empty
+
+            const productData = { name, category, description, details };
+
+            try {
+                if (productId) {
+                    // Edit existing product
+                    await makeApiRequest(`${API_BASE_URL}/products/${productId}`, 'PUT', productData);
+                    productMessage.textContent = 'Product updated successfully!';
+                    productMessage.style.color = '#28a745';
+                } else {
+                    // Add new product
+                    await makeApiRequest(`${API_BASE_URL}/products`, 'POST', productData);
+                    productMessage.textContent = 'Product added successfully!';
+                    productMessage.style.color = '#28a745';
+                }
+                productForm.reset();
+                productIdInput.value = ''; // Clear hidden ID
+                formTitle.textContent = 'Add New Product';
+                cancelEditBtn.style.display = 'none';
+                fetchProducts(); // Refresh the list
+            } catch (error) {
+                // Error message already set by makeApiRequest
+            }
+        });
+
+        // --- Edit Button Handler ---
+        function addTableEventListeners() {
+            document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const id = e.target.dataset.id;
+                    try {
+                        const product = await makeApiRequest(`${API_BASE_URL}/products/${id}`);
+                        productIdInput.value = product._id;
+                        nameInput.value = product.name;
+                        categoryInput.value = product.category;
+                        descriptionInput.value = product.description || '';
+                        detailsInput.value = product.details ? product.details.join('\n') : '';
+
+                        formTitle.textContent = `Edit Product: ${product.name}`;
+                        cancelEditBtn.style.display = 'inline-block';
+                        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to form
+                    } catch (error) {
+                        // Error message already set
+                    }
+                });
+            });
+
+            // --- Delete Button Handler ---
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const id = e.target.dataset.id;
+                    if (confirm('Are you sure you want to delete this product?')) {
+                        try {
+                            await makeApiRequest(`${API_BASE_URL}/products/${id}`, 'DELETE');
+                            productMessage.textContent = 'Product deleted successfully!';
+                            productMessage.style.color = '#28a745';
+                            fetchProducts(); // Refresh the list
+                        } catch (error) {
+                            // Error message already set
+                        }
+                    }
+                });
+            });
+        }
+
+        // --- Cancel Edit Button ---
+        cancelEditBtn.addEventListener('click', () => {
+            productForm.reset();
+            productIdInput.value = '';
+            formTitle.textContent = 'Add New Product';
+            cancelEditBtn.style.display = 'none';
+            productMessage.textContent = '';
+        });
+
+        // Initial fetch of products when the page loads
+        fetchProducts();
+    </script>
+</body>
+</html>

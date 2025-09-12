@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marble Countertops - City Hardware</title>
+    <link rel="stylesheet" href="../css/style.css"> 
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="../index.html" class="logo">City Hardware</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../index.html#products">Products</a></li>
+                <li><a href="../index.html#about">About Us</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="product-detail-page">
+        <h1>Marble Countertops</h1>
+        <div class="product-container">
+            <div class="slider-container">
+                <div class="slider-images">
+                    <img src="../images/marble-countertop.jpg" class="slider-image active" data-caption="Elegant Marble Countertops">
+                    <img src="../images/marble-forest-green.jpg" class="slider-image" data-caption="Forest Green Marble Slab">
+                    <img src="../images/marble-eldo-white.jpg" class="slider-image" data-caption="Eldo White Marble with Subtle Veining">
+                    <img src="../images/marble-chima-pink.jpg" class="slider-image" data-caption="Chima Pink Marble for a Unique Look">
+                    <!-- Add more images here -->
+                </div>
+                <div class="slider-controls">
+                    <button class="slider-control-btn prev-btn">&lt;</button>
+                    <button class="slider-control-btn next-btn">&gt;</button>
+                </div>
+                <div class="slider-caption">
+                    Elegant Marble Countertops
+                </div>
+            </div>
+            <div class="product-info">
+                <h3>Timeless Elegance, Natural Beauty</h3>
+                <p>Discover our collection of exquisite marble slabs, perfect for creating luxurious and timeless countertops, vanities, and feature walls. Each piece boasts unique veining and natural character.</p>
+
+                <!-- Product 1 -->
+                <div class="product-variant">
+                    <h4>Marble: Forest Green</h4>
+                    <p class="price">Price: <strong>Ksh. 7,500</strong> per m²</p>
+                    <button class="btn add-to-cart">Add to Cart</button>
+                </div>
+                
+                <!-- Product 2 -->
+                <div class="product-variant">
+                    <h4>Marble: Eldo White</h4>
+                    <p class="price">Price: <strong>Ksh. 7,500</strong> per m²</p>
+                    <button class="btn add-to-cart">Add to Cart</button>
+                </div>
+
+                <!-- Product 3 -->
+                <div class="product-variant">
+                    <h4>Marble: Chima Pink</h4>
+                    <p class="price">Price: <strong>Ksh. 7,500</strong> per m²</p>
+                    <button class="btn add-to-cart">Add to Cart</button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Cart Button -->
+    <div id="floatingCartButton">
+        View Quote Request (<span id="cartCount">0</span>)
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Your Quote Request</h2>
+            <div id="cartItems">
+                <p>No items in your quote request yet.</p>
+            </div>
+            <button id="requestQuoteWhatsapp" class="btn">Request Quote via WhatsApp</button>
+            <a href="../cart.html" class="btn" style="margin-left: 10px; background-color: #007bff;">View Full Quote Page</a>
+            <button id="clearCart" class="btn">Clear Cart</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>Contact Us: (123) 456-7890 | email@yourhardware.com</p>
+        <p>© 2023 City Hardware. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        // Import the common cart functionality
+        // The addToCart function is defined in cart.js
+        // The product object construction remains here as it's specific to this page's structure
+        // The renderCart, saveCart, updateCartCount, and modal/floating button listeners are in cart.js
+        
+        // Ensure addToCart is available globally from cart.js
+        // If cart.js is loaded after this script, you might need to defer this or use DOMContentLoaded
+        // For simplicity, assuming cart.js is loaded before this script executes fully.
+        
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', () => {
+                const productVariantDiv = button.closest('.product-variant');
+                const productName = productVariantDiv.querySelector('h4').textContent.trim();
+                const price = productVariantDiv.querySelector('.price').innerText;
+
+                const product = {
+                    name: productName,
+                    details: [price]
+                };
+                if (typeof addToCart === 'function') { // Check if addToCart is loaded
+                    addToCart(product);
+                }
+            });
+        });
+
+        // --- Image Slider Logic ---
+        const sliderContainer = document.querySelector('.slider-container');
+        const sliderImages = sliderContainer.querySelectorAll('.slider-image');
+        const prevBtn = sliderContainer.querySelector('.prev-btn');
+        const nextBtn = sliderContainer.querySelector('.next-btn');
+        const sliderCaption = sliderContainer.querySelector('.slider-caption');
+        let currentImageIndex = 0;
+
+        function showImage(index) {
+            sliderImages.forEach(img => {
+                img.classList.remove('active');
+            });
+            sliderImages[index].classList.add('active');
+            sliderCaption.textContent = sliderImages[index].dataset.caption;
+        }
+
+        function nextImage() {
+            currentImageIndex = (currentImageIndex + 1) % sliderImages.length;
+            showImage(currentImageIndex);
+        }
+
+        function prevImage() {
+            currentImageIndex = (currentImageIndex - 1 + sliderImages.length) % sliderImages.length;
+            showImage(currentImageIndex);
+        }
+
+        prevBtn.addEventListener('click', prevImage);
+        nextBtn.addEventListener('click', nextImage);
+
+        showImage(currentImageIndex); // Show the first image on load
+    </script>
+    <script src="../js/cart.js"></script>
+
+</body>
+</html>

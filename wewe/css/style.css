@@ -1,0 +1,589 @@
+/* --- Basic Setup & Variables --- */
+:root {
+    --primary-color: #2c3e50; /* Dark Blue/Grey */
+    --secondary-color: #3498db; /* Bright Blue */
+    --light-grey: #ecf0f1;
+    --dark-grey: #333;
+    --white: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--dark-grey);
+}
+
+/* --- General & Reusable Components --- */
+h1, h2, h3, h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: var(--secondary-color);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #2980b9;
+}
+
+/* --- Header & Navigation --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: var(--white);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+}
+
+.nav-links li {
+    margin-left: 20px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* --- Hero Section --- */
+.hero {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/hero-background.jpg') no-repeat center center/cover;
+    color: var(--white);
+    height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.hero-text {
+    max-width: 600px;
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    color: var(--white);
+}
+
+/* --- Product Grid (Home Page) --- */
+.product-grid {
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.product-grid h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin: 1rem;
+    overflow: hidden;
+    text-align: left;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+.card-content h3 {
+    margin-bottom: 0.5rem;
+}
+
+.card-content p {
+    margin-bottom: 1rem;
+}
+
+/* --- Product Detail Page --- */
+.product-detail-page {
+    padding: 2rem 5%;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.product-detail-page h1 {
+    text-align: center;
+    font-size: 2.8rem;
+    margin-bottom: 2rem;
+}
+
+.product-container {
+    display: flex;
+    gap: 2rem;
+}
+
+.product-image {
+    flex: 1;
+}
+
+.product-image img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-variant {
+    background-color: var(--light-grey);
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+}
+
+.product-variant ul {
+    list-style-position: inside;
+    margin: 1rem 0;
+}
+
+.price {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+/* --- About & Footer --- */
+.about-us {
+    background-color: var(--light-grey);
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+footer {
+    background-color: var(--primary-color);
+    color: var(--white);
+    text-align: center;
+    padding: 2rem;
+}
+
+/* --- Responsiveness --- */
+@media (min-width: 768px) {
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .nav-links {
+        /* Basic mobile menu - a better one would use JS */
+        display: none; 
+    }
+
+    .product-container {
+        flex-direction: column;
+    }
+
+    .hero-text h1 {
+        font-size: 2.2rem;
+    }
+}
+
+/* --- Modal Styles (Moved from HTML files) --- */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 600px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.cart-item {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.cart-item ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cart-item button.remove-from-cart {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.cart-item button.remove-from-cart:hover {
+    background-color: #c82333;
+}
+
+#requestQuoteWhatsapp, #clearCart, #requestQuoteWhatsappPage, #clearCartPage {
+    margin-top: 20px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+
+
+.hero {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../images/hero-background.jpg') no-repeat center center/cover;
+    /* Removed static background image to make way for slider */
+    position: relative; /* Needed for absolute positioning of slider */
+    color: var(--white);
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.hero::before { /* Optional: Add a subtle overlay on top of the slider images */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    z-index: 0; /* Below hero-text, above slider images */
+}
+
+.hero-text {
+    max-width: 600px;
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    color: var(--white);
+    position: relative; /* Ensure it's positioned above the slider */
+    z-index: 1; /* Higher z-index than the slider */
+}
+
+/* --- Product Grid (Home Page) --- */
+.product-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.card {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 999;
+}
+
+/* --- Hero Slider Styles (New) --- */
+.hero-slider-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Hide parts of images outside */
+    z-index: -1; /* Puts it behind the hero-text and overlay */
+}
+
+.hero-slider-images {
+    width: 100%;
+    height: 100%;
+    position: relative; /* For absolute positioning of individual images */
+}
+
+.hero-slider-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures images cover the area without distortion */
+    opacity: 0;
+    transition: opacity 1s ease-in-out; /* Slower transition for background */
+}
+
+.hero-slider-image.active {
+    opacity: 1;
+}
+
+.hero-slider-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    z-index: 1; /* Above the images, below the hero text */
+}
+
+/* --- Product Detail Page Slider Styles (Existing, for context) --- */
+.slider-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Adjust as needed */
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    flex: 1; /* For product-container flex layout */
+}
+
+.slider-images {
+    display: flex;
+    width: 100%;
+    height: 400px; /* Fixed height for consistency */
+    position: relative;
+}
+
+.slider-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures images cover the area without distortion */
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.slider-image.active {
+    display: block;
+    opacity: 1;
+}
+
+.slider-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 10px;
+    z-index: 10;
+}
+
+.slider-control-btn {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.slider-control-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.slider-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+
+/* Responsive adjustments for product-container */
+@media (max-width: 767px) {
+    .product-container {
+        flex-direction: column;
+    }
+    .slider-container {
+        margin-bottom: 20px; /* Add space below slider on small screens */
+    }
+}
+
+
+#requestQuoteWhatsapp, #requestQuoteWhatsappPage { background-color: #25D366; color: white; border: none; }
+#requestQuoteWhatsapp:hover, #requestQuoteWhatsappPage:hover { background-color: #1DA851; }
+#clearCart, #clearCartPage { background-color: #6c757d; color: white; border: none; margin-left: 10px; }
+#clearCart:hover, #clearCartPage:hover { background-color: #5a6268; }
+#requestQuoteWhatsapp:disabled, #clearCart:disabled, #requestQuoteWhatsappPage:disabled, #clearCartPage:disabled { opacity: 0.6; cursor: not-allowed; }
+
+#floatingCartButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 999;
+}
+
+/* --- Image Slider Styles --- */
+.slider-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Adjust as needed */
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    flex: 1; /* For product-container flex layout */
+}
+
+.slider-images {
+    display: flex;
+    width: 100%;
+    height: 400px; /* Fixed height for consistency */
+    position: relative;
+}
+
+.slider-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures images cover the area without distortion */
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.slider-image.active {
+    display: block;
+    opacity: 1;
+}
+
+.slider-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 10px;
+    z-index: 10;
+}
+
+.slider-control-btn {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1.5rem;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.slider-control-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.slider-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+
+/* Responsive adjustments for product-container */
+@media (max-width: 767px) {
+    .product-container {
+        flex-direction: column;
+    }
+    .slider-container {
+        margin-bottom: 20px; /* Add space below slider on small screens */
+    }
+}
+s
