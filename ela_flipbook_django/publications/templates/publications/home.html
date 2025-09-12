@@ -1,0 +1,50 @@
+<!-- publications/templates/publications/home.html -->
+
+{% extends 'publications/base.html' %}
+
+{% block content %}
+    <div class="hero">
+        <h1>Latest Publications</h1>
+        <p class="subtitle">Browse our collection of digital magazines.</p>
+    </div>
+
+    <div class="blog-list">
+        {% for pub in publications %}
+            <article class="blog-post-item">
+                <h3>{{ pub.title }}</h3>
+                <p class="post-date">Published on: {{ pub.uploaded_at|date:"F j, Y" }}</p>
+                <a href="{% url 'publications:detail' pk=pub.id %}" class="read-more-btn">
+                    Read Now
+                </a>
+            </article>
+        {% empty %}
+            <p>No publications have been uploaded yet. Check back soon!</p>
+        {% endfor %}
+    </div>
+{% endblock %}```
+
+##### **File: `publications/templates/publications/publication_detail.html`**
+The page that displays the actual flipbook.
+
+```html
+<!-- publications/templates/publications/publication_detail.html -->
+
+{% extends 'publications/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="flipbook-container">
+        <a href="{% url 'publications:home' %}" class="back-link">&larr; Back to Publications</a>
+        <h2>Viewing: {{ publication.title }}</h2>
+
+        <!-- dFlip.js Flipbook -->
+        <div class="_df_book" 
+             source="{{ publication.pdf_file.url }}" 
+             id="df_manual_book">
+        </div>
+    </div>
+
+    <!-- dFlip.js Scripts -->
+    <!-- Note: You need to download these files and place them in the static folder -->
+    <script src="{% static 'publications/js/dflip/dflip.min.js' %}"></script>
+{% endblock %}

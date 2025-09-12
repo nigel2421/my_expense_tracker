@@ -1,0 +1,28 @@
+<!-- publications/templates/publications/publication_detail.html -->
+
+{% extends 'publications/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="flipbook-container">
+        <a href="{% url 'publications:home' %}" class="back-link">&larr; Back to Publications</a>
+        <h2>Viewing: {{ publication.title }}</h2>
+
+        <!-- dFlip.js Flipbook Container -->
+        <div class="_df_book" 
+             source="{{ publication.pdf_file.url }}" 
+             id="df_manual_book">
+        </div>
+    </div>
+
+    <!-- === CDN Alternative for dFlip.js === -->
+    <!-- We link to the CSS and JS files directly from the JSDelivr CDN -->
+    
+    <!-- dFlip CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/dflip@1.7.32/dist/dflip.min.css" rel="stylesheet" type="text/css">
+    
+    <!-- dFlip JavaScript (and its dependency, jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dflip@1.7.32/dist/dflip.min.js" type="text/javascript"></script>
+
+{% endblock %}

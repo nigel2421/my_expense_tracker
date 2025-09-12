@@ -1,0 +1,34 @@
+<!-- publications/templates/publications/base.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlipBook CMS</title>
+    <link rel="stylesheet" href="{% static 'publications/css/style.css' %}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="{% url 'publications:home' %}" class="logo">Business Unusual Magazine</a>
+            <nav>
+                <a href="{% url 'publications:home' %}">Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% block content %}
+            <!-- Page-specific content will go here -->
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; {% now "Y" %} Your Company Name. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>
