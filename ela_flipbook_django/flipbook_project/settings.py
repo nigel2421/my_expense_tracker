@@ -113,22 +113,17 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
 # --- Static and Media File Configuration ---
 
 # This is the URL prefix for your CSS and JS files.
 STATIC_URL = 'static/'
-
-# This is where Django will collect all static files for production.
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # This is the URL prefix for user-uploaded files (your PDFs).
 # It MUST have a value, like 'media/'.
 MEDIA_URL = 'media/'
 
 # This is the absolute path to the folder where user-uploaded files will be stored.
+# It tells Django to create a 'media' folder in your project's main directory.
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
